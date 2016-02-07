@@ -1,8 +1,9 @@
 <?php
 
-namespace smn\pheeca\kernel\Database\Clause\Mysql;
+namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
+
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -149,5 +150,7 @@ class Having extends Clause {
     public function addNotOr($whereCondition = array()) {
         $this->addOr($whereCondition, true);
     }
+    
+    abstract public function getBindParams();
 
 }

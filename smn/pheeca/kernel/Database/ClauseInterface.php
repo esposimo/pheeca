@@ -9,5 +9,5 @@ interface ClauseInterface {
     
     public function toString();
     
-    public function formatString();
+    public function formatString();    
 }

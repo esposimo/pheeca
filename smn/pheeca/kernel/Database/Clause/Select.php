@@ -1,8 +1,7 @@
 <?php
-namespace smn\pheeca\kernel\Database\Clause\Mysql;
+namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
-
 /**
  * Description of Select
  *

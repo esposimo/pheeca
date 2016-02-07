@@ -2,7 +2,9 @@
 
 namespace smn\pheeca\kernel\Database;
 
-class Clause {
+use \smn\pheeca\kernel\Database\ClauseInterface;
+
+class Clause implements ClauseInterface {
     
     
     /**

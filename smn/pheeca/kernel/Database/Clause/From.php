@@ -1,6 +1,6 @@
 <?php
 
-namespace smn\pheeca\kernel\Database\Clause\Mysql;
+namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
 
@@ -41,5 +41,5 @@ class From extends Clause {
     public function formatString() {
         $this->_formedString = sprintf('%s %s %s %s', $this->_clause, $this->_prefix, $this->_fields, $this->_suffix);
     }
-
+    
 }
