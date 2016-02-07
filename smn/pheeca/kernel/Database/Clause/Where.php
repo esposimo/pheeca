@@ -1,8 +1,9 @@
 <?php
 
-namespace smn\pheeca\kernel\Database\Clause\Mysql;
+namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
+use \smn\pheeca\kernel\Database\BindableClauseInterface;
 
 /*
  * To change this license header, choose License Headers in Project Properties.
@@ -15,7 +16,7 @@ use \smn\pheeca\kernel\Database\Clause;
  *
  * @author Simone Esposito
  */
-class Where extends Clause {
+class Where extends Clause implements BindableClauseInterface {
 
     const STATEMENT_KEY_BETWEEN = 'BETWEEN';
     const STATEMENT_KEY_IN = 'IN';
@@ -148,6 +149,10 @@ class Where extends Clause {
 
     public function addNotOr($whereCondition = array()) {
         $this->addOr($whereCondition, true);
+    }
+
+    public function getBindParams() {
+        return $this->_bindParams;
     }
 
 }
