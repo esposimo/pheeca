@@ -9,19 +9,19 @@ class Database {
      * @var Array 
      */
     protected static $_connections;
+    protected static $_driver_used = array();
 
     /**
      * Constante che indica il database di default sul quale eseguire le query
      */
     const DEFAULT_RESOURCE = 'default';
 
-    protected static $_adapters = array(
+    protected static $_drivers = array(
         'mysql' => '\smn\pheeca\kernel\Database\Adapter\Mysql'
     );
     protected static $_clauses = array(
         'mysql' => '\smn\pheeca\kernel\Database\Clause\Mysql\\'
     );
-    
     protected static $_defaultClauseNS = '\smn\pheeca\kernel\Database\Clause\\';
 
     /**
@@ -43,20 +43,43 @@ class Database {
             $otherOptions = $database['options'];
             $driver = $database['driver'];
 
-            $class = self::getClassNameByAdaptersName($driver);
+            $class = self::getDriverClassNameByDriverName($driver);
             self::$_connections[$index] = new $class($hostname, $port, $dbname, $username, $password, $otherOptions);
+            self::$_driver_used[$index] = $driver;
         }
     }
 
-    public static function getClassNameByAdaptersName($name) {
-        if (!array_key_exists($name, self::$_adapters)) {
+    /**
+     * Restituisce il nome della classe driver utilizzabile per la connessione 
+     * in base al nome del driver indicato
+     * @param String $name
+     * @return String
+     */
+    public static function getDriverClassNameByDriverName($name) {
+        if (!array_key_exists($name, self::$_drivers)) {
             error_log('Non esiste il driver ' . $name);
             return;
         }
-        $class = self::$_adapters[$name];
+        $class = self::$_drivers[$name];
         return $class;
         //return new $class($adapter_name, $adapter_params);
     }
+    
+    /**
+     * Restituisce il driver utilizzato per la connessione indicata
+     * @param String $connection_name
+     * @return String|Null
+     */
+    public static function getDriverNameByConnectionName($connection_name = 'default') {
+        if (array_key_exists($connection_name, self::$_driver_used)) {
+            $driver = self::$_driver_used[$connection_name];
+            return $driver;
+        }
+        return null;
+    }
+    
+    
+    
 
     /**
      * @deprecated since version number
@@ -95,15 +118,46 @@ class Database {
 
     /**
      * Restituisce il namespace per le clausole in base al driver indicato
-     * @param type $name
+     * @param String $driver
+     * @return String 
      */
-    public static function getClauseNSFromName($name = 'default') {
-        if (!array_key_exists($name, self::$_clauses)) {
-            error_log('Non esiste il driver ' . $name);
-            return false;
+    public static function getClauseNSFromDriverName($driver = null) {
+        if ((is_null($driver)) || (!array_key_exists($driver, self::$_clauses))) {
+            $namespace = self::$_defaultClauseNS;
+        } else {
+            $namespace = self::$_clauses[$driver];
         }
-        $namespace = self::$_clauses[$name];
         return $namespace;
+    }
+
+    /**
+     * Restituisce il namespace per le clausole in base al nome connessione indicato
+     * Il metodo ricava il driver del nome connessione indicato e poi ricava il namespace
+     * con il metodo getClauseNSFromDriverName. Se il namespace non esiste , restituisce
+     * il namespace base delle clausole
+     * @param String $connection_name
+     * @return String|Null
+     */
+    public static function getClauseNSFromConnectionName($connection_name = 'default') {
+        $driver = self::getDriverNameByConnectionName($connection_name);
+        return self::getClauseNSFromDriverName($driver);
+    }
+
+    
+
+    /**
+     * Restituisce una classe Clause in base al nome ed al driver indicato
+     * @param String $clause_name
+     * @param String $connection_name
+     * @return String
+     */
+    public static function getClauseClassNameFromConnectionName($clause_name, $connection_name = 'default') {
+        $namespace = self::getClauseNSFromConnectionName($connection_name);
+        $classname = $namespace . ucfirst($clause_name);
+        if (!class_exists($classname)) {
+            $classname = self::$_defaultClauseNS .ucfirst($clause_name);
+        }
+        return $classname;
     }
 
     /**
