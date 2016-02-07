@@ -2,9 +2,6 @@
 
 namespace smn\pheeca\kernel;
 
-use \smn\pheeca\kernel\Database\DatabaseException;
-use \smn\pheeca\kernel\Validate\Exception as ValidateException;
-
 class Database {
 
     /**
@@ -24,6 +21,8 @@ class Database {
     protected static $_clauses = array(
         'mysql' => '\smn\pheeca\kernel\Database\Clause\Mysql\\'
     );
+    
+    protected static $_defaultClauseNS = '\smn\pheeca\kernel\Database\Clause\\';
 
     /**
      * 
