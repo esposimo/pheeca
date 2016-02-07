@@ -1,13 +1,11 @@
 <?php
-/**
- * @package Test
- */
 namespace smn\pheeca\kernel\Database;
 
 /**
  * @author Simone Esposito
  */
 interface AdapterInterface {
+    
 
     /**
      * @return \PDO|Resource
