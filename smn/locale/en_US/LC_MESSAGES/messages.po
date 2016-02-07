@@ -1,0 +1,41 @@
+msgid ""
+msgstr ""
+"Project-Id-Version: \n"
+"POT-Creation-Date: \n"
+"PO-Revision-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en_US\n"
+"X-Generator: Poedit 1.8.1\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+"X-Poedit-SourceCharset: iso-8859-9\n"
+
+# Test1
+msgid "Testo da tradurre"
+msgstr "Testo di tua madre"
+
+msgid "Simone è bello"
+msgid_plural "Simoni sono belli"
+msgstr[0] "Simone is great"
+msgstr[1] "Simone are great"
+
+msgid "Template file non trovato"
+msgstr "Template file not found"
+
+msgid "Impossibile caricare la classe %s"
+msgstr "Class file %s not found"
+
+msgid "Nessun template di errore trovato"
+msgstr "No error template found"
+
+msgid "Template file illeggibile, controlla i permessi"
+msgstr "No pemission on template file, check permission"
+
+msgid "Non hai i permessi sul file %s indicato"
+msgstr "No permission on file %s"
+
+msgid "Il file %s no esiste"
+msgstr "File %s doesn't exist"
