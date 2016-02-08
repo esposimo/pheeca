@@ -66,7 +66,7 @@ class Database {
         return $class;
         //return new $class($adapter_name, $adapter_params);
     }
-    
+
     /**
      * Restituisce il driver utilizzato per la connessione indicata
      * @param String $connection_name
@@ -79,9 +79,6 @@ class Database {
         }
         return null;
     }
-    
-    
-    
 
     /**
      * @deprecated since version number
@@ -124,8 +121,14 @@ class Database {
         // se bind_params viene passato, indipendentemente dal fatto che $query è una query o meno, vengono presi in considerazione questi parametri
         // anzichè quelli della classe $query passata
         $stmt = $pdo->prepare($string);
-        $stmt->execute($params);
-        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
+        try {
+            $stmt->execute($params);
+            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return new Database\Rowset($result);
+        } catch (\PDOException $ex) {
+            return false;
+        }
+        
     }
 
     /**
@@ -165,8 +168,6 @@ class Database {
         return self::getClauseNSFromDriverName($driver);
     }
 
-    
-
     /**
      * Restituisce una classe Clause in base al nome ed al driver indicato
      * @param String $clause_name
@@ -177,7 +178,7 @@ class Database {
         $namespace = self::getClauseNSFromConnectionName($connection_name);
         $classname = $namespace . ucfirst($clause_name);
         if (!class_exists($classname)) {
-            $classname = self::$_defaultClauseNS .ucfirst($clause_name);
+            $classname = self::$_defaultClauseNS . ucfirst($clause_name);
         }
         return $classname;
     }
