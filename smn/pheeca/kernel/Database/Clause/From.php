@@ -3,6 +3,7 @@
 namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
+use \smn\pheeca\kernel\Database\Query;
 
 /**
  * Description of Select
@@ -27,7 +28,7 @@ class From extends Clause {
         $fields = array();
         $tables = $this->getData();
         foreach ($tables as $tableAlias => $tableName) {
-            if ($tableName instanceof \Query) { // aggiustare qui !!
+            if ($tableName instanceof Query) { // aggiustare qui !!
                 $fields[] = sprintf('(%s)', trim($tableName->toString()));
             } else if (is_numeric($tableAlias)) {
                 $fields[] = $tableName;
