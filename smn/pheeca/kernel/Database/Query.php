@@ -2,55 +2,84 @@
 namespace smn\pheeca\kernel\Database;
 
 
-use \smn\pheeca\kernel\Database;
+use \smn\pheeca\kernel\Database\Clause;
+use \smn\pheeca\kernel\Database\BindableClauseInterface;
 
-use \smn\pheeca\kernel\Database\Clause\Mysql\Select;
-use \smn\pheeca\kernel\Database\Clause\Mysql\From;
-use \smn\pheeca\kernel\Database\Clause\Mysql\Where;
 
 /**
  * Description of Query
  *
  * @author Simone Esposito
  */
-class Query {
-    //put your code here
-    
-    
-    protected $_queryStatement = array();
-    
-    
-    public function __construct($dataQuery, $adapter = 'default') {
-        
-        $clauseNamespace = Database::getClauseNamespace($adapter);
-        foreach($dataQuery as $clause => $data) {
-            $class = $clauseNamespace .$clause;
-            $this->_queryStatement[] = new $class($data);
+class Query implements QueryStatement {
+
+    protected $_connectionName;
+
+    /**
+     *
+     * @var type 
+     */
+    protected $_clauseList = array();
+
+    public function __construct($clauselist = array(), $connection_name = 'default') {
+        $this->setConnectionName($connection_name);
+        foreach ($clauselist as $clausename => $clausedata) {
+            if (($clausedata instanceof Query) || ($clausedata instanceof Clause)) {
+                $this->_clauseList[$clausename] = $clausedata;
+            } else {
+                $class = \smn\pheeca\kernel\Database::getClauseClassNameFromConnectionName($clausename, $this->getConnectionName());
+                $reflection = new \ReflectionClass($class);
+                $instance = $reflection->newInstanceArgs($clausedata);
+                $this->_clauseList[$clausename] = $instance;
+            }
         }
     }
-    
-    
-    public function select($fields, $prefix = '', $suffix = '') {
-        $this->_select = new Select($fields, $prefix, $suffix);
+
+    public function __toString() {
+        return $this->getStringQuery();
     }
-    
-    public function from($tables, $prefix = '', $suffix = '') {
-        $this->_from = new From($tables, $prefix, $suffix);
-    }
-    
-    public function where($condition, $prefix = '', $suffix = '') {
-        $this->_where = new Where($condition, $prefix, $suffix);
-    }
-    
-    
-    
-    
+
     public function toString() {
-        $finalQuery = array();
-        foreach($this->_queryStatement as $query) {
-            $finalQuery[] = $query->toString();
-        }
-        return implode(' ', $finalQuery);
+        return $this->getStringQuery();
     }
-    
+
+    public function setConnectionName($name) {
+        $this->_connectionName = $name;
+    }
+
+    public function getConnectionName() {
+        return $this->_connectionName;
+    }
+
+    /**
+     * Restituisce la query in formato stringa
+     * @return String
+     */
+    public function getStringQuery() {
+        $query = '';
+        foreach ($this->_clauseList as $clause) {
+            $query .= $clause->toString();
+        }
+        return $query;
+    }
+
+    public function getBindParams() {
+        $params = array();
+        foreach ($this->_clauseList as $clause) {
+            if (($clause instanceof BindableClauseInterface) || ($clause instanceof Query)) {
+                $params = array_merge($params, $clause->getBindParams());
+            }
+        }
+        return $params;
+    }
+
+    /**
+     * Esegue la query
+     */
+    public function execQuery() {
+        echo '<pre>';
+        print_r($this->getBindParams());
+        echo '</pre>';
+    }
+
 }

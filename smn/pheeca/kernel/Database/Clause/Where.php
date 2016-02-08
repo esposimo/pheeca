@@ -77,7 +77,7 @@ class Where extends Clause implements BindableClauseInterface {
 
 
         $condition = (object) array_merge($default, $cond);
-
+        
         $column = $condition->column;
         $value = $condition->value;
         $logic = $condition->logic;
@@ -116,7 +116,7 @@ class Where extends Clause implements BindableClauseInterface {
     }
 
     public function addBindParams($name, $value) {
-        $replace = sprintf('%s_%s', ':' . $name, $this->_replacement_counter++);
+        $replace = sprintf(':%s_%s_%s', $this->_uniquePrefixBindParams, $name, $this->_replacement_counter++);
         $this->_bindParams[$replace] = $value;
         return $replace;
     }
@@ -128,9 +128,10 @@ class Where extends Clause implements BindableClauseInterface {
             $data[key($data)]['conjunction'] = $conjunction;
             $data[key($data)]['negate'] = $negate;
             reset($data);
-            foreach ($whereCondition as $where) {
-                array_push($data, $where);
-            }
+//            foreach ($whereCondition as $where) {
+//                array_push($data, $where);
+//            }
+            array_push($data, $whereCondition);
             $this->setData($data);
         }
     }
