@@ -16,6 +16,7 @@ class From extends Clause implements BindableClauseInterface {
     protected $_name = 'from';
     protected $_clause = 'FROM';
     
+    protected $_derivedTableCounter = 0;
 
     public function __construct($fields, $prefix = '', $suffix = '') {
         parent::__construct([
@@ -30,7 +31,7 @@ class From extends Clause implements BindableClauseInterface {
         $tables = $this->getData();
         foreach ($tables as $tableAlias => $tableName) {
             if ($tableName instanceof Query) { // aggiustare qui !!
-                $fields[] = sprintf('(%s)', trim($tableName->toString()));
+                $fields[] = sprintf('(%s) %s%s', trim($tableName->toString()), 't', ++$this->_derivedTableCounter);
             } else if (is_numeric($tableAlias)) {
                 $fields[] = $tableName;
             } else {
