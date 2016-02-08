@@ -26,7 +26,7 @@ class Mysql implements AdapterInterface {
      * @param type $options
      */
     public function __construct($hostname = 'localhost', $port = '3306', $database = '', $username = '', $password = '', $options = array()) {
-        $dsn = sprintf('mysql:dbname=%s;host=%s:%s', $database, $hostname, $port);
+        $dsn = sprintf('mysql:dbname=%s;host=%s;port=%s', $database, $hostname, $port);
         $this->_dbInstance = new \PDO($dsn, $username, $password, $options);
     }
 
