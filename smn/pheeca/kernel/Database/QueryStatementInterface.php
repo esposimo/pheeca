@@ -11,7 +11,7 @@ namespace smn\pheeca\kernel\Database;
  *
  * @author Simone Esposito
  */
-interface QueryStatement {
+interface QueryStatementInterface {
 
     public function toString();
 

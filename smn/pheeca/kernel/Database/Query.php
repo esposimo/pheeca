@@ -4,6 +4,7 @@ namespace smn\pheeca\kernel\Database;
 
 use \smn\pheeca\kernel\Database\Clause;
 use \smn\pheeca\kernel\Database\BindableClauseInterface;
+use \smn\pheeca\kernel\Database\QueryStatementInterface;
 
 
 /**
@@ -11,7 +12,7 @@ use \smn\pheeca\kernel\Database\BindableClauseInterface;
  *
  * @author Simone Esposito
  */
-class Query implements QueryStatement {
+class Query implements QueryStatementInterface {
 
     protected $_connectionName;
 
