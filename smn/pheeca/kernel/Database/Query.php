@@ -1,7 +1,7 @@
 <?php
 namespace smn\pheeca\kernel\Database;
 
-
+use \smn\pheeca\kernel\Database;
 use \smn\pheeca\kernel\Database\Clause;
 use \smn\pheeca\kernel\Database\BindableClauseInterface;
 use \smn\pheeca\kernel\Database\QueryStatementInterface;
@@ -28,7 +28,7 @@ class Query implements QueryStatementInterface {
             if (($clausedata instanceof Query) || ($clausedata instanceof Clause)) {
                 $this->_clauseList[$clausename] = $clausedata;
             } else {
-                $class = \smn\pheeca\kernel\Database::getClauseClassNameFromConnectionName($clausename, $this->getConnectionName());
+                $class = Database::getClauseClassNameFromConnectionName($clausename, $this->getConnectionName());
                 $reflection = new \ReflectionClass($class);
                 $instance = $reflection->newInstanceArgs($clausedata);
                 $this->_clauseList[$clausename] = $instance;
@@ -77,10 +77,8 @@ class Query implements QueryStatementInterface {
     /**
      * Esegue la query
      */
-    public function execQuery() {
-        echo '<pre>';
-        print_r($this->getBindParams());
-        echo '</pre>';
+    public function exec() {
+        return Database::query($this, null, $this->getConnectionName());
     }
 
 }
