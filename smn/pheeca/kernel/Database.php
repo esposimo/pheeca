@@ -110,22 +110,22 @@ class Database {
      * @return Array
      */
     public static function query($query, $bind_params = null, $connection_name = 'default') {
-        $pdo = self::getPDOLinkFromConnectionName($name);
+        $pdo = self::getPDOLinkFromConnectionName($connection_name);
         $string = $query;
+        $params = array();
         if ($query instanceof Query) {
             $string = $query->toString();
             $params = $query->getBindParams();
         }
-        if (is_null($bind_params)) {
+        if (!is_null($bind_params)) {
             $params = $bind_params;
         }
         // se $query è una istanza $query, allora prenditi la query in formato testo
         // se bind_params viene passato, indipendentemente dal fatto che $query è una query o meno, vengono presi in considerazione questi parametri
         // anzichè quelli della classe $query passata
-        
         $stmt = $pdo->prepare($string);
         $stmt->execute($params);
-        return $stmt->fetchAll();
+        return $stmt->fetchAll(\PDO::FETCH_ASSOC);
     }
 
     /**
