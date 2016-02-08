@@ -173,21 +173,21 @@ class Database {
     }
 
     /**
-     * Aggiunge un nuovo driver $adapter_name associando la classe $adapter_alias
-     * @param String $adapter_name Nome del driver
+     * Aggiunge un nuovo driver $driver_name associando la classe $driver_class
+     * @param String $driver_name Nome del driver
      * @param String $adapter_class Classe del driver inclusa di namespace
      */
-    public static function addAdapterClass($adapter_name, $adapter_class) {
-        self::$_adapters[$adapter_name] = $adapter_class;
+    public static function addAdapterClass($driver_name, $driver_class) {
+        self::$_drivers[$driver_name] = $driver_class;
     }
 
     /**
      * Aggiunge un nuovo namespace $clause_namespace per le classi Clause associandolo al driver $adapter_name
-     * @param String $adapter_name Nome del driver
+     * @param String $driver_name Nome del driver
      * @param String $clause_namespace Namespace di base per le classi clausole
      */
-    public static function addClauseNamespace($adapter_name, $clause_namespace) {
-        self::$_clauses[$adapter_name] = $clause_namespace;
+    public static function addClauseNamespace($driver_name, $clause_namespace) {
+        self::$_clauses[$driver_name] = $clause_namespace;
     }
 
 }
