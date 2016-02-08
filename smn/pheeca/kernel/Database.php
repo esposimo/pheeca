@@ -2,6 +2,8 @@
 
 namespace smn\pheeca\kernel;
 
+use \smn\pheeca\kernel\Database\Query;
+
 class Database {
 
     /**
@@ -95,14 +97,34 @@ class Database {
 
     /**
      * Esegue la query $query con i parametri indicati in $bind_params sul driver $name
+     * Viene creato una classe PDOStatement con la query $query. Se $query è una classe
+     * di tipo Query, viene estratta la query in formato testo dalla classe $query
+     * e in aggiunta i parametri da bindare, qualora ce ne siano, vengono prelevati
+     * sempre dalla stessa classe $query.
+     * Se invece vengono inviati $bind_params in formato array monodimensionale, indipendentemente dal fatto
+     * che $query abbia dei parametri bindati, saranno presi in considerazione quelli
+     * inviati al metodo.
      * @param String|\PDOStatement $query
      * @param Array $bind_params
+     * @params String $connection_name Nome del connection name sul quale eseguire la query
      * @return Array
      */
-    public static function query($query, $bind_params = array(), $name = 'default') {
+    public static function query($query, $bind_params = null, $connection_name = 'default') {
         $pdo = self::getPDOLinkFromConnectionName($name);
-        $stmt = $pdo->prepare($query);
-        $stmt->execute($bind_params);
+        $string = $query;
+        if ($query instanceof Query) {
+            $string = $query->toString();
+            $params = $query->getBindParams();
+        }
+        if (is_null($bind_params)) {
+            $params = $bind_params;
+        }
+        // se $query è una istanza $query, allora prenditi la query in formato testo
+        // se bind_params viene passato, indipendentemente dal fatto che $query è una query o meno, vengono presi in considerazione questi parametri
+        // anzichè quelli della classe $query passata
+        
+        $stmt = $pdo->prepare($string);
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 
