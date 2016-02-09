@@ -3,12 +3,13 @@
 namespace smn\pheeca\kernel;
 
 use \smn\pheeca\kernel\Database\Query;
+use \smn\pheeca\kernel\Database\Rowset;
 
 class Database {
 
     /**
      * Contiene tutte le resource di connessione ai database
-     * @var Array 
+     * @var Database\AdapterInterface 
      */
     protected static $_connections;
     protected static $_driver_used = array();
@@ -101,36 +102,29 @@ class Database {
      * Se invece vengono inviati $bind_params in formato array monodimensionale, indipendentemente dal fatto
      * che $query abbia dei parametri bindati, saranno presi in considerazione quelli
      * inviati al metodo.
-     * @param String|\PDOStatement $query
-     * @param Array $bind_params
+     * @param String|\PDOStatement|Query $query Query da eseguire. Può essere una stringa, un PDOStatement o una classe Query
+     * @param Array $bind_params Lista dei parametri da bindare nella query $query
      * @params String $connection_name Nome del connection name sul quale eseguire la query
+     * @params Integer $fetch_style Constante PDO::FETCH_* da utilizzare per il metodo PDOStatement::fetchAll(). Di default
+     * viene utilizzato PDO::FETCH_ASSOC 
      * @return Array
      */
-    public static function query($query, $bind_params = null, $connection_name = 'default') {
-        $pdo = self::getPDOLinkFromConnectionName($connection_name);
-        $string = $query;
-        $params = array();
-        if ($query instanceof Query) {
-            $string = $query->toString();
-            $params = $query->getBindParams();
-        }
-        if (!is_null($bind_params)) {
-            $params = $bind_params;
-        }
-        // se $query è una istanza $query, allora prenditi la query in formato testo
-        // se bind_params viene passato, indipendentemente dal fatto che $query è una query o meno, vengono presi in considerazione questi parametri
-        // anzichè quelli della classe $query passata
-        $stmt = $pdo->prepare($string);
-        try {
-            $stmt->execute($params);
-            $result = $stmt->fetchAll(\PDO::FETCH_ASSOC);
-            return new Database\Rowset($result);
-        } catch (\PDOException $ex) {
+    public static function query($query, $bind_params = null, $connection_name = 'default', $fetch_style = \PDO::FETCH_ASSOC) {
+        if (!array_key_exists($connection_name, self::$_connections)) {
             return false;
         }
-        
+        $adapter_class = self::$_connections[$connection_name];
+        return $adapter_class->query($query, $bind_params, $fetch_style);
     }
-
+    
+    public static function callProcedure($query, $bind_params = null, &$return_params = array(), $connection_name = 'default') {
+        if (!array_key_exists($connection_name, self::$_connections)) {
+            return false;
+        }
+        $adapter_class = self::$_connections[$connection_name];
+        return $adapter_class->callProcedure($query, $bind_params, $return_params);
+    }
+    
     /**
      * Restituisce la PDO 
      * @param type $name
@@ -179,6 +173,24 @@ class Database {
         $classname = $namespace . ucfirst($clause_name);
         if (!class_exists($classname)) {
             $classname = self::$_defaultClauseNS . ucfirst($clause_name);
+        }
+        return $classname;
+    }
+    
+    /**
+     * Restituisce in formato stringa la classe clause disponibile in base al driver.
+     * Se viene indicata come $clause_name Select, e come $driver_name 'mysql', 
+     * se esiste una Select Clause nel namespace Clause\Mysql , essa sarà restituita,
+     * altrimenti sarà restituita la classe Clause\Select()
+     * @param String $clause_name Nome della clausola
+     * @param String $driver_name Nome del driver
+     * @return String Nome della classe incluso il namespace
+     */
+    public static function getClauseClassNameFromDriverName($clause_name, $driver_name) {
+        $namespace = self::getClauseNSFromDriverName($driver_name);
+        $classname = $namespace .ucfirst($clause_name);
+        if (!class_exists($classname)) {
+            $classname = self::$_defaultClauseNS .ucfirst($clause_name);
         }
         return $classname;
     }
