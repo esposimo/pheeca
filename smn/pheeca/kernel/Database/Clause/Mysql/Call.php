@@ -4,7 +4,6 @@ namespace smn\pheeca\kernel\Database\Clause\Mysql;
 
 use \smn\pheeca\kernel\Database\Clause;
 use \smn\pheeca\kernel\Database\BindableClauseInterface;
-use \smn\pheeca\kernel\Database\BindableCallInterface;
 use \smn\pheeca\kernel\Database;
 
 /**
