@@ -4,6 +4,8 @@ namespace smn\pheeca\kernel\Database\Adapter;
 
 use \smn\pheeca\kernel\Database\AdapterInterface;
 use \smn\pheeca\kernel\Database\DatabaseException;
+use \smn\pheeca\kernel\Database\Query;
+use \smn\pheeca\kernel\Database\Rowset;
 
 /**
  * @author Simone Esposito
@@ -82,49 +84,78 @@ class Mysql implements AdapterInterface {
         $this->_dbInstance->rollBack();
     }
 
-    public function query($query) {
-        // qui mi prendo l'istanza e se $query è un'interfaccia
-        // 
-        // qui prendo la $query e valuto
-        // se è una stringa , la eseguo così com'è
-        // se è un oggetto di tipo Select
-        // valido i dati richiamando il metodo valid della select
-        // se ci sono exception, le catturo
-        // altrimenti eseguo la query inviando anche i parametri, che mi darà ovviamente la classe che rappresenta la query
-        //
-        //
-        
-        if ($query instanceof \smn\pheeca\kernel\Database\Statement\PDO\Select) {
-            $query->validate();
-            $pdo = $this->getDbInstance();
-            $statement = $pdo->prepare($query->toString());
-            $query->bindAllParams($statement);
-            $statement->execute();
-            if ($statement->errorCode() == 0) {
-                $rowset = new \smn\pheeca\kernel\Database\Rowset($statement->fetchAll(\PDO::FETCH_ASSOC));
-                return $rowset;
-            } else {
-                $code = $statement->errorInfo()[1];
-                throw new DatabaseException(implode('|', $statement->errorInfo()), $code);
-            }
+    public function query($query, $bind_params = null, $fetch_style = \PDO::FETCH_ASSOC) {
+        $pdo = $this->getDbInstance();
+        $string = $query;
+        $params = array();
+        if ($query instanceof Query) {
+            $string = $query->toString();
+            $params = $query->getBindParams();
+            $stmt = $pdo->prepare($string);
+        } else if ($query instanceof \PDOStatement) {
+            $stmt = $query;
+        } else {
+            $stmt = $pdo->prepare($query);
         }
 
-        if (is_string($query)) {
-            $pdo = $this->getDbInstance();
-            $statement = $pdo->prepare($query);
-            $statement->execute();
-            if ($statement->errorCode() == 0) {
-                $rowset = new \smn\pheeca\kernel\Database\Rowset($statement->fetchAll(\PDO::FETCH_ASSOC));
-                return $rowset;
-            } else {
-                $code = $statement->errorInfo()[1];
-                throw new DatabaseException(implode('|', $statement->errorInfo()), $code);
-            }
+        if (!is_null($bind_params)) {
+            $params = $bind_params;
+        }
+
+        try {
+            $stmt->execute($params);
+            $result = $stmt->fetchAll($fetch_style);
+            return new Rowset($result);
+        } catch (\PDOException $ex) {
+            echo $ex->getMessage();
+            return false;
         }
     }
-
-    public function test() {
+    /**
+     * Esegue una procedura ed inserisce eventuali parametri di ritorno in $return_params
+     * @param type $query
+     * @param type $bind_params
+     * @param type $return_params
+     * @return boolean
+     */
+    public function callProcedure($query, $bind_params = null, &$return_params = null) {
+        $pdo = $this->getDbInstance();
+        $string = $query;
+        $params = array();
+        if ($query instanceof Query) {
+            $string = $query->toString();
+            $params = $query->getBindParams();
+            $stmt = $pdo->prepare($string);
+        }
+        else if ($query instanceof \PDOStatement) {
+            $stmt = $query;
+        }
+        else {
+            $stmt = $pdo->prepare($query);
+        }
+        
+        if (!is_null($bind_params)) {
+            $params = $bind_params;
+        }
+        
+        try {
+            $stmt->execute($params);
+            if (is_null($return_params)) {
+                return true; // procedure eseguita
+            }
+            // altrimenti se non è null vuol dire che è stato passato e quindi devo ricavarmi i valori
+            // in mysql non è possibile usare la costante \PDO::PARAM_INPUT_OUTPUT in quanto genera errore
+            // quindi faccio una select sulle variabili indicate in fase di chiamata
+            $selectclassname = \smn\pheeca\kernel\Database::getClauseClassNameFromDriverName('select', 'mysql');
+            $select_class = new $selectclassname($return_params);
+            $stmt = $pdo->prepare($select_class->toString());
+            $stmt->execute($return_params);
+            $return_params = $stmt->fetchAll(\PDO::FETCH_ASSOC);
+            return $return_params;
+        } catch (\PDOException $ex) {
+            echo 'Adapter in exception : ' .$ex->getMessage();
+            return false;
+        }
         
     }
-
 }
