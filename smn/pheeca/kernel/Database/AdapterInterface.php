@@ -46,5 +46,7 @@ interface AdapterInterface {
      * @param type $query
      * @param type $bindparams
      */
-    public function query($query);
+    public function query($query, $bind_params = null, $fetch_style = \PDO::FETCH_ASSOC);
+    
+    public function callProcedure($query, $bind_params = null, &$return_params = array());
 }
