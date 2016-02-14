@@ -105,7 +105,6 @@ class Mysql extends \PDO {
             $string = $query->toString();
             $params = $query->getBindParams();
             $stmt = $this->prepare($string);
-            echo 'devo eseguire ' .$string .'<br>';
         } else if ($query instanceof \PDOStatement) {
             $stmt = $query;
         } else {
