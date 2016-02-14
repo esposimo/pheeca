@@ -3,7 +3,7 @@
 namespace smn\pheeca\kernel\Database\Clause\Mysql;
 
 use \smn\pheeca\kernel\Database\Clause;
-use \smn\pheeca\kernel\Database\BindableClauseInterface;
+use \smn\pheeca\kernel\Database\RunnableClauseInterface;
 use \smn\pheeca\kernel\Database;
 
 /**
@@ -11,7 +11,7 @@ use \smn\pheeca\kernel\Database;
  *
  * @author Simone Esposito
  */
-class Call extends Clause implements BindableClauseInterface {
+class Call extends Clause implements RunnableClauseInterface {
 
     protected $_name = 'call';
     protected $_clause = 'CALL';
@@ -35,4 +35,9 @@ class Call extends Clause implements BindableClauseInterface {
     public function getBindParams() {
         return $this->_bind_params;
     }
+
+    public function getQueryString() {
+        return $this->toString();
+    }
+
 }

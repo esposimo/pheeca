@@ -2,35 +2,35 @@
 
 namespace smn\pheeca\kernel\Database\Adapter;
 
-use \smn\pheeca\kernel\Database\AdapterInterface;
 use \smn\pheeca\kernel\Database\DatabaseException;
 use \smn\pheeca\kernel\Database\Query;
 use \smn\pheeca\kernel\Database\Rowset;
+use \smn\pheeca\kernel\Database\Transaction;
+use \smn\pheeca\kernel\Database\RunnableClauseInterface;
 
 /**
  * @author Simone Esposito
  */
-class Mysql implements AdapterInterface {
+class Mysql extends \PDO {
 
     /**
      * 
      * @var Resource 
      */
     protected $_dbInstance;
+    protected $_transaction_counter = 0;
 
     /**
      * Inizializza la connessione
-     * @param type $hostname
-     * @param type $port
-     * @param type $database
+     * @param type $dsn
      * @param type $username
      * @param type $password
      * @param type $options
      */
-    public function __construct($hostname = 'localhost', $port = '3306', $database = '', $username = '', $password = '', $options = array()) {
-        $dsn = sprintf('mysql:dbname=%s;host=%s;port=%s', $database, $hostname, $port);
-        $this->_dbInstance = new \PDO($dsn, $username, $password, $options);
-        $this->_dbInstance->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+    public function __construct($dsn, $username, $password, $options = array()) {
+        parent::__construct($dsn, $username, $password, $options);
+//        $this->_dbInstance = new \PDO($dsn, $username, $password, $options);
+        $this->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
     }
 
     /**
@@ -38,22 +38,15 @@ class Mysql implements AdapterInterface {
      * @return \PDO
      */
     public function getDbInstance() {
-        return $this->_dbInstance;
+        return $this;
     }
 
     /**
      * Imposta l'autocommit
-     * @param type $set
+     * @param Boolean $set
      */
     public function autoCommit($set = true) {
-        $this->_dbInstance->setAttribute(PDO::ATTR_AUTOCOMMIT, $set);
-    }
-
-    /**
-     * Esegue il commit
-     */
-    public function commit() {
-        $this->_dbInstance->commit();
+        $this->setAttribute(\PDO::ATTR_AUTOCOMMIT, $set);
     }
 
     /**
@@ -61,12 +54,40 @@ class Mysql implements AdapterInterface {
      * @return type
      * @throws Database_Exception
      */
-    public function initTransition() {
-        $init = $this->_dbInstance->beginTransaction();
-        if (!$this->_dbInstance->beginTransaction()) {
-            throw new Database_Exception('No transaction init');
+    public function beginTransaction() {
+        if ($this->_transaction_counter == 0) {
+            parent::beginTransaction();
+        } else {
+            $savepoint = sprintf('SAVEPOINT LEVEL%s', $this->_transaction_counter);
+            $this->exec($savepoint);
         }
-        return $init;
+        $this->_transaction_counter++;
+    }
+
+    /**
+     * Esegue il commit
+     */
+    public function commit() {
+        $this->_transaction_counter--;
+        if ($this->_transaction_counter == 0) {
+            parent::commit();
+        } else {
+            $releasepoint = sprintf('RELEASE SAVEPOINT LEVEL%s', $this->_transaction_counter);
+            $this->exec($releasepoint);
+        }
+    }
+
+    /**
+     * Esegue un rollback
+     */
+    public function rollBack() {
+        $this->_transaction_counter--;
+        if ($this->_transaction_counter == 0) {
+            parent::rollBack();
+        } else {
+            $savepoint = sprintf('ROLLBACK TO SAVEPOINT LEVEL%s', $this->_transaction_counter);
+            $this->exec($savepoint);
+        }
     }
 
     /**
@@ -74,17 +95,42 @@ class Mysql implements AdapterInterface {
      * @return Boolean
      */
     public function isTransition() {
-        return $this->_dbInstance->inTransaction();
+        return $this->inTransaction();
     }
 
+    public function execquery($query, $bind_params = null, $fetch_style = \PDO::FETCH_ASSOC) {
+        $string = $query;
+        $params = array();
+        if (($query instanceof Query) || ($query instanceof RunnableClauseInterface)) {
+            $string = $query->toString();
+            $params = $query->getBindParams();
+            $stmt = $this->prepare($string);
+            echo 'devo eseguire ' .$string .'<br>';
+        } else if ($query instanceof \PDOStatement) {
+            $stmt = $query;
+        } else {
+            $stmt = $this->prepare($query);
+        }
+
+        if (!is_null($bind_params)) {
+            $params = $bind_params;
+        }
+        try {
+            $stmt->execute($params);
+            $result = $stmt->fetchAll($fetch_style);
+            return new Rowset($result);
+        } catch (\PDOException $ex) {
+            return false;
+        }
+    }
     /**
-     * Esegue un rollback
+     * Esegue una procedura ed inserisce eventuali parametri di ritorno in $return_params
+     * @param type $query
+     * @param type $bind_params
+     * @param type $return_params
+     * @return boolean
      */
-    public function rollback() {
-        $this->_dbInstance->rollBack();
-    }
-
-    public function query($query, $bind_params = null, $fetch_style = \PDO::FETCH_ASSOC) {
+    public function callProcedure($query, $bind_params = null, &$return_params = null) {
         $pdo = $this->getDbInstance();
         $string = $query;
         $params = array();
@@ -104,42 +150,6 @@ class Mysql implements AdapterInterface {
 
         try {
             $stmt->execute($params);
-            $result = $stmt->fetchAll($fetch_style);
-            return new Rowset($result);
-        } catch (\PDOException $ex) {
-            echo $ex->getMessage();
-            return false;
-        }
-    }
-    /**
-     * Esegue una procedura ed inserisce eventuali parametri di ritorno in $return_params
-     * @param type $query
-     * @param type $bind_params
-     * @param type $return_params
-     * @return boolean
-     */
-    public function callProcedure($query, $bind_params = null, &$return_params = null) {
-        $pdo = $this->getDbInstance();
-        $string = $query;
-        $params = array();
-        if ($query instanceof Query) {
-            $string = $query->toString();
-            $params = $query->getBindParams();
-            $stmt = $pdo->prepare($string);
-        }
-        else if ($query instanceof \PDOStatement) {
-            $stmt = $query;
-        }
-        else {
-            $stmt = $pdo->prepare($query);
-        }
-        
-        if (!is_null($bind_params)) {
-            $params = $bind_params;
-        }
-        
-        try {
-            $stmt->execute($params);
             if (is_null($return_params)) {
                 return true; // procedure eseguita
             }
@@ -153,9 +163,36 @@ class Mysql implements AdapterInterface {
             $return_params = $stmt->fetchAll(\PDO::FETCH_ASSOC);
             return $return_params;
         } catch (\PDOException $ex) {
-            echo 'Adapter in exception : ' .$ex->getMessage();
+            echo 'Adapter in exception : ' . $ex->getMessage();
             return false;
         }
-        
     }
+
+    /**
+     * 
+     * @param Transaction $transaction
+     */
+    public function transaction(Transaction $transaction, $auto_commit = true) {
+        try {
+            $this->beginTransaction();
+            foreach ($transaction as $query) {
+                if ($query instanceof Query) {
+                    $queryString = $query->toString();
+                    $params = $query->getBindParams();
+                }
+                if (is_array($query)) {
+                    $queryString = $query['query'];
+                    $params = $query['params'];
+                }
+                $stmt = $this->prepare($queryString);
+                $stmt->execute($params);
+            }
+            if ($auto_commit === true) {
+                $this->commit();
+            }
+        } catch (\PDOException $exception) {
+            echo $exception->getMessage();
+        }
+    }
+
 }

@@ -4,6 +4,7 @@ namespace smn\pheeca\kernel;
 
 use \smn\pheeca\kernel\Database\Query;
 use \smn\pheeca\kernel\Database\Rowset;
+use \smn\pheeca\kernel\Database\Transaction;
 
 class Database {
 
@@ -12,6 +13,11 @@ class Database {
      * @var Database\AdapterInterface 
      */
     protected static $_connections;
+
+    /**
+     *
+     * @var Array \PDO
+     */
     protected static $_driver_used = array();
 
     /**
@@ -38,16 +44,14 @@ class Database {
                 return;
             }
             // check config, se ne manca una , errore
+            $dsn = $database['dsn'];
             $username = $database['user'];
             $password = $database['pass'];
-            $hostname = $database['host'];
-            $port = $database['port'];
-            $dbname = $database['database'];
-            $otherOptions = $database['options'];
+            $options = $database['options'];
             $driver = $database['driver'];
 
             $class = self::getDriverClassNameByDriverName($driver);
-            self::$_connections[$index] = new $class($hostname, $port, $dbname, $username, $password, $otherOptions);
+            self::$_connections[$index] = new $class($dsn, $username, $password, $options);
             self::$_driver_used[$index] = $driver;
         }
     }
@@ -94,17 +98,10 @@ class Database {
     }
 
     /**
-     * Esegue la query $query con i parametri indicati in $bind_params sul driver $name
-     * Viene creato una classe PDOStatement con la query $query. Se $query è una classe
-     * di tipo Query, viene estratta la query in formato testo dalla classe $query
-     * e in aggiunta i parametri da bindare, qualora ce ne siano, vengono prelevati
-     * sempre dalla stessa classe $query.
-     * Se invece vengono inviati $bind_params in formato array monodimensionale, indipendentemente dal fatto
-     * che $query abbia dei parametri bindati, saranno presi in considerazione quelli
-     * inviati al metodo.
+     * Richiama il metodo query dell'adapter associato al connection name $connection_name
      * @param String|\PDOStatement|Query $query Query da eseguire. Può essere una stringa, un PDOStatement o una classe Query
      * @param Array $bind_params Lista dei parametri da bindare nella query $query
-     * @params String $connection_name Nome del connection name sul quale eseguire la query
+     * @params String $connection_name Nome del connection name associato all'adapter che eseguirà la query
      * @params Integer $fetch_style Constante PDO::FETCH_* da utilizzare per il metodo PDOStatement::fetchAll(). Di default
      * viene utilizzato PDO::FETCH_ASSOC 
      * @return Array
@@ -114,9 +111,17 @@ class Database {
             return false;
         }
         $adapter_class = self::$_connections[$connection_name];
-        return $adapter_class->query($query, $bind_params, $fetch_style);
+        return $adapter_class->execquery($query, $bind_params, $fetch_style);
     }
-    
+
+    /**
+     * Richiama il metodo callProcedure dell'adapter associato al connection name $connection_name
+     * @param String|\PDOStatement|Query $query Query da eseguire
+     * @param Array $bind_params Lista dei parametri da bindare nel caso in cui $query sia una stringa. Vanno bindati sia i parametri di input che di output
+     * @param Array $return_params Lista dei valori che saranno restituiti dalla procedura
+     * @param String $connection_name
+     * @return boolean
+     */
     public static function callProcedure($query, $bind_params = null, &$return_params = array(), $connection_name = 'default') {
         if (!array_key_exists($connection_name, self::$_connections)) {
             return false;
@@ -124,7 +129,15 @@ class Database {
         $adapter_class = self::$_connections[$connection_name];
         return $adapter_class->callProcedure($query, $bind_params, $return_params);
     }
-    
+
+    public static function transaction(Transaction $transaction, $auto_commit = true, $connection_name = 'default') {
+        if (!array_key_exists($connection_name, self::$_connections)) {
+            return false;
+        }
+        $adapter_class = self::$_connections[$connection_name];
+        $adapter_class->transaction($transaction, $auto_commit);
+    }
+
     /**
      * Restituisce la PDO 
      * @param type $name
@@ -176,7 +189,7 @@ class Database {
         }
         return $classname;
     }
-    
+
     /**
      * Restituisce in formato stringa la classe clause disponibile in base al driver.
      * Se viene indicata come $clause_name Select, e come $driver_name 'mysql', 
@@ -188,9 +201,9 @@ class Database {
      */
     public static function getClauseClassNameFromDriverName($clause_name, $driver_name) {
         $namespace = self::getClauseNSFromDriverName($driver_name);
-        $classname = $namespace .ucfirst($clause_name);
+        $classname = $namespace . ucfirst($clause_name);
         if (!class_exists($classname)) {
-            $classname = self::$_defaultClauseNS .ucfirst($clause_name);
+            $classname = self::$_defaultClauseNS . ucfirst($clause_name);
         }
         return $classname;
     }
