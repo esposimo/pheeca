@@ -4,6 +4,7 @@ namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
 use \smn\pheeca\kernel\Database\BindableClauseInterface;
+use \smn\pheeca\kernel\Database\StatementException;
 
 /*
  * To change this license header, choose License Headers in Project Properties.

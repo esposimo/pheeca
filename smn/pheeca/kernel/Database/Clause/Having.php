@@ -3,6 +3,8 @@
 namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
+use \smn\pheeca\kernel\Database\BindableClauseInterface;
+use \smn\pheeca\kernel\Database\StatementException;
 
 
 /*
@@ -151,6 +153,7 @@ class Having extends Clause {
         $this->addOr($whereCondition, true);
     }
     
-    abstract public function getBindParams();
-
+     public function getBindParams() {
+        return $this->_bindParams;
+    }
 }

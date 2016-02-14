@@ -61,6 +61,4 @@ class GroupBy extends Clause {
         $this->_formedString = sprintf('%s %s %s %s', $this->_clause, $this->_prefix, $this->_fields, $this->_suffix);
     }
 
-    
-    abstract public function getBindParams();
 }
