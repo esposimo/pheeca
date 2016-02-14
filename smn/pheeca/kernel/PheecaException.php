@@ -6,6 +6,6 @@ namespace smn\pheeca\kernel;
  *
  * @author Simone Esposito
  */
-class Exception extends \Exception {
+class PheecaException extends \Exception {
     //put your code here
 }
