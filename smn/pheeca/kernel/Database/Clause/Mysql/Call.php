@@ -17,7 +17,7 @@ class Call extends Clause implements RunnableClauseInterface {
     protected $_clause = 'CALL';
     protected $_bind_params = array();
 
-    public function __construct($procedure_name, $bind_parameters = null, $return_parameters = null, $suffix = '', $prefix = '') {
+    public function __construct($procedure_name = '', $bind_parameters = null, $return_parameters = null, $suffix = '', $prefix = '') {
         parent::__construct([
             'prefix' => $prefix,
             'data' => $procedure_name,

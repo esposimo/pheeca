@@ -1,7 +1,9 @@
 <?php
+
 namespace smn\pheeca\kernel\Database\Clause;
 
 use \smn\pheeca\kernel\Database\Clause;
+
 /**
  * Description of Select
  *
@@ -13,7 +15,7 @@ class Select extends Clause {
     protected $_clause = 'SELECT';
 
     public function __construct($fields = array('*'), $prefix = '', $suffix = '') {
-        parent::__construct([
+        $this->initData([
             'prefix' => $prefix,
             'data' => $fields,
             'suffix' => $suffix]
@@ -54,7 +56,7 @@ class Select extends Clause {
             $this->_fields = $this->processSelect($this->getData());
         }
     }
-    
+
     public function formatString() {
         $this->_formedString = sprintf('%s %s %s %s', $this->_clause, $this->_prefix, $this->_fields, $this->_suffix);
     }

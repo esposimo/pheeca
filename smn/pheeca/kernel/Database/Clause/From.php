@@ -18,7 +18,10 @@ class From extends Clause implements BindableClauseInterface {
     
     protected $_derivedTableCounter = 0;
 
-    public function __construct($fields, $prefix = '', $suffix = '') {
+    public function __construct($fields = '', $prefix = '', $suffix = '') {
+        if (is_string($fields)) {
+            $fields = array($fields);
+        }
         parent::__construct([
             'prefix' => $prefix,
             'data' => $fields,

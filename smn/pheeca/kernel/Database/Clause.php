@@ -5,8 +5,7 @@ namespace smn\pheeca\kernel\Database;
 use \smn\pheeca\kernel\Database\ClauseInterface;
 
 class Clause implements ClauseInterface {
-    
-    
+
     /**
      * Dati prima essere elaborati. Qui vanno inseriti i dati ricevuti nel 
      * costruttore e quelli che possono essere inseriti con eventuali metodi
@@ -33,14 +32,14 @@ class Clause implements ClauseInterface {
      * @var Mixed
      */
     protected $_fields;
-    
+
     /**
      * Prefisso che sarà inserito dopo il nome della clausola ma prima
      * dei dati
      * @var Mixed
      */
     protected $_prefix;
-    
+
     /**
      * Suffisso che sarà inserito dopo i dati
      * @var Mixed
@@ -53,7 +52,6 @@ class Clause implements ClauseInterface {
      */
     protected $_formedString = '';
 
-    
     /**
      * Istanzia la classe ricevendo un array. L'array deve essere nel formato
      * array('prefix' => '', 'data' => '', 'suffix' => '') dove ogni campo
@@ -62,6 +60,10 @@ class Clause implements ClauseInterface {
      * @param Array $data
      */
     public function __construct($data = array()) {
+        $this->initData($data);
+    }
+
+    public function initData($data = array()) {
         if (array_key_exists('prefix', $data)) {
             $this->setPrefix($data['prefix']);
         }
@@ -73,7 +75,6 @@ class Clause implements ClauseInterface {
         }
     }
 
-    
     /**
      * Imposta il prefisso
      * @param Mixed $prefix
@@ -127,7 +128,7 @@ class Clause implements ClauseInterface {
     public function getSuffix() {
         return $this->_data['suffix'];
     }
-    
+
     /**
      * Costruisce la stringa finale della clausola. Questo metodo, richiamato
      * dal metodo magico __toString() , esegue prima 4 metodi che sono 
@@ -140,7 +141,6 @@ class Clause implements ClauseInterface {
      * meglio si crede
      * @return String
      */
-
     public function toString() {
         $this->processPrefix();
         $this->processFields();
@@ -183,7 +183,7 @@ class Clause implements ClauseInterface {
         $this->_suffix = $this->_data['suffix'];
         return $this;
     }
-    
+
     /**
      * Imposta il nome della clausola (indicativo)
      * @param String $name
@@ -193,7 +193,7 @@ class Clause implements ClauseInterface {
         $this->_name = $name;
         return $this;
     }
-    
+
     /**
      * Restituisce il nome della clausola
      * @return String
@@ -201,7 +201,7 @@ class Clause implements ClauseInterface {
     public function getName() {
         return $this->_name;
     }
-    
+
     /**
      * Imposta il nome della clausola (usato per formare la stringa)
      * @param String $name
@@ -211,6 +211,7 @@ class Clause implements ClauseInterface {
         $this->_clause = $name;
         return $this;
     }
+
     /**
      * Restituisce il nome della clausola
      * @return String
@@ -233,4 +234,5 @@ class Clause implements ClauseInterface {
         $this->_formedString = sprintf('%s %s %s %s', $this->_clause, $this->_prefix, $this->_fields, $this->_suffix);
         return $this;
     }
+
 }

@@ -38,26 +38,21 @@ class Rowset implements \Iterator {
     public function valid() {
         return isset($this->_rowset[$this->_position]);
     }
-
-    public function __get($name) {
-        $upper = strtoupper($name);
-        $rowset = $this->_rowset[$this->_position];
-        if (array_key_exists($upper, array_change_key_case($rowset, CASE_UPPER))) {
-            return $this->_rowset[$this->_position][$upper];
-        }
+    
+    public function first() {
+        return $this->_rowset[0];
+    }
+    
+    public function last() {
+        return $this->_rowset[(count($this->_rowset)-1)];
     }
 
     public function __call($name, $arguments) {
-        $upper = strtoupper($name);
-        $num = $arguments[0];
-        if ($num > count($this->_rowset)) {
-            return null;
+        $rownumber = $arguments[0];
+        if ((isset($this->_rowset[$rownumber])) && (isset($this->_rowset[$rownumber]->$name))) {
+            return $this->_rowset[$rownumber]->$name;
         }
-        $data = $this->_rowset[$num];
-        if (array_key_exists($upper, array_change_key_case($data, CASE_UPPER))) {
-            return $this->_rowset[$num][$upper];
-        }
-        return null;
+        return false;
     }
 
 }

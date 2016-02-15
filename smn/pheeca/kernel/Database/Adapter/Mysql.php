@@ -98,7 +98,7 @@ class Mysql extends \PDO {
         return $this->inTransaction();
     }
 
-    public function execquery($query, $bind_params = null, $fetch_style = \PDO::FETCH_ASSOC) {
+    public function execquery($query, $bind_params = null, $fetch_style = \PDO::FETCH_OBJ) {
         $string = $query;
         $params = array();
         if (($query instanceof Query) || ($query instanceof RunnableClauseInterface)) {

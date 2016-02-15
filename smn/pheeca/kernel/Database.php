@@ -106,7 +106,7 @@ class Database {
      * viene utilizzato PDO::FETCH_ASSOC 
      * @return Array
      */
-    public static function query($query, $bind_params = null, $connection_name = 'default', $fetch_style = \PDO::FETCH_ASSOC) {
+    public static function query($query, $bind_params = null, $connection_name = 'default', $fetch_style = \PDO::FETCH_OBJ) {
         if (!array_key_exists($connection_name, self::$_connections)) {
             return false;
         }
@@ -207,17 +207,37 @@ class Database {
         }
         return $classname;
     }
+    
+    /**
+     * Restituisce una nuova istanza clause in base al nome richiesto e al driver indicato
+     * @param String $clause_name
+     * @param String $driver_name
+     * @return Database\Clause
+     */
+    public static function getClauseClassInstanceFromDriverName($clause_name, $driver_name) {
+        $classname = self::getClauseClassNameFromDriverName($clause_name, $driver_name);
+        return new $classname();
+    }
+    
+    /**
+     * Restituisce una nuova istanza clause in base al nome richiesto e all'identificativo di connessione
+     * @param String $clause_name
+     * @param String $connection_name
+     * @return Database\Clause
+     */
+    public static function getClauseClassInstanceFromConnectionName($clause_name, $connection_name = 'default') {
+        $classname = self::getClauseClassNameFromConnectionName($clause_name, $connection_name);
+        return new $classname();
+    }
 
     /**
      * Restituisce una classe query e le assegna un driver
-     * @param type $class_name
-     * @param type $name
+     * @param Array $clause_list Lista di clausole
+     * @param String $name Nome della connessione
+     * @return Query
      */
-    public static function getQueryClass($name = 'default') {
-        if (self::getClauseNSFromName($name)) {
-            // deve ri
-        }
-        return false;
+    public static function getQueryClass($clause_list = array(), $name = 'default') {
+        return new Query($clause_list, $name);
     }
 
     /**
