@@ -9,7 +9,7 @@ namespace smn\pheeca\kernel\Database;
 /**
  * Gestisce il risultato di una query
  */
-class Rowset implements \Iterator {
+class Rowset implements \Iterator, \ArrayAccess {
 
     protected $_position = 0;
     protected $_rowset = array();
@@ -53,6 +53,26 @@ class Rowset implements \Iterator {
             return $this->_rowset[$rownumber]->$name;
         }
         return false;
+    }
+
+    public function offsetExists($offset) {
+         return isset($this->_rowset[$offset]);
+    }
+
+    public function offsetGet($offset) {
+        return isset($this->_rowset[$offset]) ? $this->_rowset[$offset] : null;
+    }
+
+    public function offsetSet($offset, $value) {
+        if (is_null($offset)) {
+            $this->_rowset[] = $value;
+        } else {
+            $this->_rowset[$offset] = $value;
+        }
+    }
+
+    public function offsetUnset($offset) {
+        unset($this->_rowset[$offset]);
     }
 
 }

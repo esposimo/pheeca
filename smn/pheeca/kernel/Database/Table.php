@@ -49,7 +49,12 @@ class Table extends Model {
         return $this->run(self::QUERY_GET_TABLE);
     }
     
-    
+    /**
+     * Applica una condizione alla query su tabella estraendo solo la riga
+     * corrispondente alla primary key indicata
+     * @param Mixed $pkeys
+     * @return Boolean|Rowset
+     */
     public function getByPrimaryKey($pkeys = array()) {
         if (is_array($pkeys)) {
             reset($this->_pkeys);
